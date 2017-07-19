@@ -21,7 +21,7 @@ INC = -I ./
 
 LIBMAKE = make -C libft/
 
-LIBINC = -I libft/libft.h -L./libft -lft
+# LIBINC = -I libft/libft.h -L./libft -lft
 
 all: $(NAME)
 
@@ -54,7 +54,6 @@ libfclean:
 libre:
 	@$(LIBMAKE) re
 
-debugmain:
-	@$(LIBMAKE) debug
-	@$(CC) $(FLAGS) -g ft_printf.c main.c
-	@echo  "\033[1;31m DEBUG compilation finished\033[0m"
+debug:
+	@$(CC) $(FLAGS) -g $(LIBOBJ) $(INC) ./libft/libft.h main.c
+	@echo  "\033[1;33m DEBUG compilation finished\033[0m"
