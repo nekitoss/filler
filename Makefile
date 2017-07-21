@@ -17,7 +17,9 @@ OBJ = $(SRC:.c=.o)
 
 LIBOBJ = libft/*.o
 
-INC = -I ./
+INC = -I ./ -I ./libft/
+
+LIB = -L ./libft -lft
 
 LIBMAKE = make -C libft/
 
@@ -27,7 +29,7 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	@$(LIBMAKE) all
-	@$(CC) $(FLAGS) $(OBJ) -o $(NAME)
+	@$(CC) $(FLAGS) $(INC) $(LIB) $(OBJ) -o $(NAME)
 	@echo  "\033[32mCompiled and created filler binary\033[0m"
 
 %.o: %.c
@@ -38,6 +40,7 @@ clean: libclean
 	@echo "\033[01;31mFiller object files deleted\033[0m"
 
 fclean: libfclean clean
+	@rm -rf *.dSYM
 	@rm -f $(NAME) a.out
 	@echo "\033[01;31mFiller binary file deleted\033[0m"
 
