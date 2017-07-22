@@ -1,6 +1,7 @@
 #define DEBUG
 
 #include "ft_filler.h"
+#define LINE (ls->line)
 
 typedef struct	s_filler
 {
@@ -13,6 +14,7 @@ typedef struct	s_filler
 	char	**fig;
 	char	**map;
 	char	c;
+	char	*line;
 }				t_filler;
 
 void	debug_msg(char *str)
@@ -52,30 +54,38 @@ void			struct_delete(t_filler	**ls)
 	*ls = NULL;
 }
 
-// void			renew_array
+void			renew_fig_array(t_filler *ls)
+{
+	size_t i;
+
+	i = 0;
+	ft_arrdel((void ***)&(ls->fig));
+	while (i < ls->map_h && get_next_line(0, &LINE))
+	{
+
+	}
+}
 
 void			read_header(t_filler *ls)
 {
-	char		*line;
-
-	if(get_next_line(0, &line) && ft_strnequ(line, "$$$ exec p", 10))
+	if(get_next_line(0, &LINE) && ft_strnequ(LINE, "$$$ exec p", 10))
 	{
-		if (line[10] == '2')
+		if (LINE[10] == '2')
 			ls->c = 'X';
 		else
 			ls->c = 'O';
-		ft_strdel(&line);
+		ft_strdel(&LINE);
 	}
 	else
 		error_msg("while reading first line!");
 	debug_msg_nonl("player_letter="); debug_msg(&(ls->c));
-	if(get_next_line(0, &line) && ft_strnequ(line, "Plateau ", 8))
+	if(get_next_line(0, &LINE) && ft_strnequ(LINE, "Plateau ", 8))
 	{
-		line = ft_strsub_d(&line, ft_strchr(line, ' ') - line + 1, ft_strlen(line));
-		ls->map_h = ft_atoi(line);
-		line = ft_strsub_d(&line, ft_strchr(line, ' ') - line, ft_strlen(line));
-		ls->map_w = ft_atoi(line);
-		ft_strdel(&line);
+		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE + 1, ft_strlen(LINE));
+		ls->map_h = ft_atoi(LINE);
+		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
+		ls->map_w = ft_atoi(LINE);
+		ft_strdel(&LINE);
 	}
 	else
 		error_msg("while reading 2nd line!");
@@ -85,38 +95,35 @@ void			read_header(t_filler *ls)
 
 void			read_piece(t_filler *ls)
 {
-	char		*line;
-
-	if(get_next_line(0, &line) && ft_strnequ(line, "Piece ", 6))
+	if(get_next_line(0, &LINE) && ft_strnequ(LINE, "Piece ", 6))
 	{
-		line = ft_strsub_d(&line, ft_strchr(line, ' ') - line + 1, ft_strlen(line));
-		ls->fig_h = ft_atoi(line);
-		line = ft_strsub_d(&line, ft_strchr(line, ' ') - line, ft_strlen(line));
-		ls->fig_w = ft_atoi(line);
-		ft_strdel(&line);
+		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE + 1, ft_strlen(LINE));
+		ls->fig_h = ft_atoi(LINE);
+		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
+		ls->fig_w = ft_atoi(LINE);
+		ft_strdel(&LINE);
 	}
 	else
 		error_msg("while reading piece info line!");
 	debug_msg_nonl("fig_width="); debug_msg(ft_itoa_u(ls->fig_w));
 	debug_msg_nonl("fig_height="); debug_msg(ft_itoa_u(ls->fig_h));
-	renew_array(ls);
+	renew_fig_array(ls);
 }
 
 int				main(void)
 {
-	char		*line;
 	t_filler	*ls;
 	size_t		i;
 
 	i = 0;
 	ls = (t_filler *)ft_memalloc(sizeof(t_filler));
 	read_header(ls);
-	get_next_line(0, &line);
+	get_next_line(0, &LINE);
 
-	while (i < ls->map_h && get_next_line(0, &line))
+	while (i < ls->map_h && get_next_line(0, &LINE))
 	{
-		debug_msg(line);
-		ft_strdel(&line);
+		debug_msg(LINE);
+		ft_strdel(&LINE);
 		i++;
 	}
 	read_piece(ls);
