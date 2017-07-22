@@ -2,10 +2,13 @@
 
 typedef struct	s_filler
 {
-	size_t	width;
-	size_t	height;
+	size_t	map_w;
+	size_t	map_h;
+	size_t	fig_w;
+	size_t	fig_h;
+	char	**fig;
 	char	**map;
-
+	
 }				t_filler;
 
 void			struct_delete(t_filler	**ls)
