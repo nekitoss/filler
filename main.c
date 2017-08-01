@@ -1,5 +1,5 @@
 // #define DEBUG
-// #define ERRRORING
+#define ERRRORING
 
 #include "ft_filler.h"
 #define LINE (ls->line)
@@ -207,7 +207,7 @@ int				try_to_put_piece(t_filler *ls, size_t x, size_t y)
 					//debug_msg_nonl("overlap at ");debug_msg_nonl(ft_itoa_u(x+f_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(y+f_y));
 					ls->is_overlap = 1;
 				}
-				else if (!((ls->map)[x + f_x][y + f_y] == '.'))
+				else if (!((ls->map)[y + f_y][x + f_x] == '.'))
 					return (0);
 			}
 			f_y++;
