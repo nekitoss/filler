@@ -1,5 +1,5 @@
 // #define DEBUG
-#define ERRRORING
+// #define ERRRORING
 
 #include "ft_filler.h"
 #define LINE (ls->line)
@@ -7,18 +7,19 @@
 
 typedef struct	s_filler
 {
-	size_t	map_w;
-	size_t	map_h;
-	size_t	fig_w;
-	size_t	fig_h;
-	size_t	put_x;
-	size_t	put_y;
+	ssize_t	map_w;
+	ssize_t	map_h;
+	ssize_t	fig_w;
+	ssize_t	fig_h;
+	ssize_t	put_x;
+	ssize_t	put_y;
 	char	**fig;
 	char	**map;
 	char	c;
 	char	*line;
 	int		ok;
 	int		is_overlap;
+	int		reverse;
 }				t_filler;
 
 void	debug_msg(char *str)
@@ -63,7 +64,7 @@ void			struct_delete(t_filler	**ls)
 	*ls = NULL;
 }
 
-int			check_read(t_filler *ls, char *str, size_t len)
+int			check_read(t_filler *ls, char *str, ssize_t len)
 {
 	int res;
 
@@ -81,7 +82,7 @@ int			check_read(t_filler *ls, char *str, size_t len)
 
 void			renew_fig_array(t_filler *ls)
 {debug_msg("renew_fig_array");
-	size_t i;
+	ssize_t i;
 
 	i = 0;
 	if (ls->ok)
@@ -101,8 +102,10 @@ void			renew_fig_array(t_filler *ls)
 
 void			read_piece(t_filler *ls)
 {debug_msg("read_piece");
+	ls->fig_h = 0;
+	ls->fig_w = 0;
 	int res = get_next_line(0, &LINE);
-debug_msg_nonl("READ_PIECE=");debug_msg(LINE);
+// debug_msg_nonl("READ_PIECE=");debug_msg(LINE);
 	if(ls->ok &&  res> 0 && ft_strnequ(LINE, "Piece ", 6))
 	{
 		// debug_msg(LINE);
@@ -124,7 +127,7 @@ debug_msg_nonl("READ_PIECE=");debug_msg(LINE);
 
 void			first_read_map(t_filler *ls)
 {debug_msg("first_read_map");
-	size_t		i;
+	ssize_t		i;
 
 	i = 0;
 	check_read(ls, "    0", 5);
@@ -170,17 +173,19 @@ void			read_header(t_filler *ls)
 
 void			read_map(t_filler *ls)
 {debug_msg("read_map");
-	size_t		i;
+	ssize_t		i;
+	char		*tmp;
 
 	i = 0;
 	check_read(ls, "Plateau ", 8);
 	check_read(ls, "    0", 5);
 	while (ls->ok && i < ls->map_h && get_next_line(0, &LINE) > 0)
 	{
-		free(ls->map[i] - SHIFT);
+		tmp = ls->map[i] - SHIFT;
+		ft_strdel(&tmp);
 		(ls->map)[i] = LINE + SHIFT;
 		// debug_msg(LINE);
-		debug_msg((ls->map)[i]);
+		// debug_msg((ls->map)[i]);
 		i++;
 		// sleep(1);
 	}
@@ -188,10 +193,10 @@ void			read_map(t_filler *ls)
 	read_piece(ls);
 }
 
-int				try_to_put_piece(t_filler *ls, size_t x, size_t y)
+int				try_to_put_piece(t_filler *ls, ssize_t x, ssize_t y)
 {
-	size_t f_x;
-	size_t f_y;
+	ssize_t f_x;
+	ssize_t f_y;
 // debug_msg("START");
 	ls->is_overlap = 0;
 	f_x = 0;
@@ -199,7 +204,8 @@ int				try_to_put_piece(t_filler *ls, size_t x, size_t y)
 	{
 		f_y = 0;
 		while (f_y < ls->fig_h)
-		{//debug_msg_nonl("try at ");debug_msg_nonl(ft_itoa_u(x+f_x)); debug_msg_nonl(" : "); debug_msg_nonl(ft_itoa_u(y+f_y)); debug_msg_nonl("; fig at ");debug_msg_nonl(ft_itoa_u(f_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(f_y));
+		{
+		// debug_msg_nonl("try at ");debug_msg_nonl(ft_itoa_u(x+f_x)); debug_msg_nonl(" : "); debug_msg_nonl(ft_itoa_u(y+f_y)); debug_msg_nonl("; fig at ");debug_msg_nonl(ft_itoa_u(f_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(f_y));
 			if ((ls->fig)[f_y][f_x] == '*')
 			{//debug_msg("is *; ");
 				if (!(ls->is_overlap) && (ls->map)[y + f_y][x + f_x] == ls->c)
@@ -219,20 +225,14 @@ int				try_to_put_piece(t_filler *ls, size_t x, size_t y)
 	// return (1);
 }
 
-void			find_place(t_filler *ls, size_t x, size_t y)
+void			find_place(t_filler *ls, ssize_t x, ssize_t y)
 {debug_msg("find_place");
-	size_t x_w;
-	size_t y_h;
-	
-	ls->put_y = 0;
-	ls->put_x = 0;
 	if (ls->map_w >= ls->fig_w && ls->map_h >= ls->fig_h)
 	{
-		x_w = ls->map_w - ls->fig_w;
-		y_h = ls->map_h - ls->fig_h;
-		while (x < x_w)
+		while (y >= 0)
 		{
-			while (y < y_h)
+			x = ls->map_w - ls->fig_w;
+			while (x >= 0)
 			{
 				if (try_to_put_piece(ls, x, y))
 				{
@@ -241,12 +241,40 @@ void			find_place(t_filler *ls, size_t x, size_t y)
 					debug_msg_nonl("FOUND "); debug_msg_nonl(ft_itoa_u(x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(y));
 					return ;
 				}
-				// else
-					// debug_msg("cannot place");
-				y++;
+				x--;
 			}
-			y = 0;
-			x++;
+			y--;
+		}
+		error_msg("there is no way to put that shit on map!", ls);
+	}
+	else
+		error_msg("figure is smaller than map!", ls);
+}
+
+void			find_place_reverse(t_filler *ls, ssize_t x, ssize_t y)
+{debug_msg("find_place_reverse");
+	ssize_t x_w;
+	ssize_t y_h;
+
+	if (ls->map_w >= ls->fig_w && ls->map_h >= ls->fig_h)
+	{
+		x_w = ls->map_w - ls->fig_w;
+		y_h = ls->map_h - ls->fig_h;
+		while (y < y_h)
+		{
+			x = 0;
+			while (x < x_w)
+			{
+				if (try_to_put_piece(ls, x, y))
+				{
+					ls->put_x = x;
+					ls->put_y = y;
+					debug_msg_nonl("FOUND "); debug_msg_nonl(ft_itoa_u(x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(y));
+					return ;
+				}
+				x++;
+			}
+			y++;
 		}
 		error_msg("there is no way to put that shit on map!", ls);
 	}
@@ -262,13 +290,45 @@ void			do_answer(t_filler *ls)
 	ft_putchar('\n');
 }
 
+void			check_direction(t_filler *ls)
+{debug_msg("check_direction");
+	ssize_t		i;
+	ssize_t		pos[2][2];
+	char		*fnd_o;
+	char		*fnd_x;
+
+	i = 0;
+	while (i < ls->map_h)
+	{
+		fnd_o = ft_strchr((ls->map)[i], 'O');
+		fnd_x = ft_strchr((ls->map)[i], 'X');
+		if (fnd_o)
+		{
+			pos[0][0] = fnd_o - (ls->map)[i];
+			pos[0][1] = i;
+		}
+		if (fnd_x)
+		{
+			pos[1][0] = fnd_x - (ls->map)[i];
+			pos[1][1] = i;
+		}
+		i++;
+	}
+	ls->reverse = ((pos[0][1] > pos[1][1]) ? 1 : 0);
+	debug_msg_nonl("reverse ="); debug_msg(ft_itoa_u(ls->reverse));
+}
+
 int				main(void)
 {
 	t_filler	*ls;
 
 	ls = (t_filler *)ft_memalloc(sizeof(t_filler));
 	read_header(ls);
-	find_place(ls, 0, 0);
+	check_direction(ls);
+	if (ls->reverse)
+			find_place_reverse(ls, 0, 0);
+	else
+		find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
 	do_answer(ls);
 	// debug_msg("first_print answer");
 	// 	write(1, "8 2\n", 4);
@@ -276,7 +336,10 @@ int				main(void)
 	while(1)
 	{
 		read_map(ls);
-		find_place(ls, 0, 0);
+		if (ls->reverse)
+			find_place_reverse(ls, 0, 0);
+		else
+			find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
 		// debug_msg_nonl("PUT_AT "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
 		// printf("%zu %zu\n", ls->put_y, ls->put_x);
 		do_answer(ls);
