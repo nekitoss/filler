@@ -1,9 +1,11 @@
 #define DEBUG
-#define ERRRORING
+// #define ERRRORING
 
 #include "ft_filler.h"
 #define LINE (ls->line)
 #define SHIFT 4
+#define MY -1
+#define ENEMY -2
 
 typedef struct	s_filler
 {
@@ -16,10 +18,12 @@ typedef struct	s_filler
 	char	**fig;
 	char	**map;
 	char	c;
+	char	e;
 	char	*line;
 	int		ok;
 	int		is_overlap;
 	int		reverse;
+	int		**matr;
 }				t_filler;
 
 void	debug_msg(char *str)
@@ -125,6 +129,87 @@ void			read_piece(t_filler *ls)
 	renew_fig_array(ls);
 }
 
+void prnt_matrix(t_filler *ls)
+{
+	int		x;
+	int		y;
+
+	y = 0;
+	while (y < ls->map_h)
+	{
+		x = 0;
+		while (x < ls->map_w)
+		{
+			debug_msg_nonl(ft_itoa((ls->matr)[y][x]));
+			debug_msg_nonl(" ");
+			x++;
+		}
+		debug_msg("");
+		y++;
+	}
+}
+
+void			calculate_distance(t_filler *ls, int e_x, int e_y)
+{
+	int		x;
+	int		y;
+
+	y = 0;
+	while (y < ls->map_h)
+	{
+		x = 0;
+		while (x < ls->map_w)
+		{
+			if ((ls->map)[y][x] == ls->c)
+				(ls->matr)[y][x] = MY;
+			else if ((ls->map)[y][x] == ls->e)
+				(ls->matr)[y][x] = ENEMY;
+			else
+				(ls->matr)[y][x] = ABS((x - e_x)) + ABS((y - e_y));
+			x++;
+		}
+		y++;
+	}
+}
+
+void			make_distance_matrix(t_filler *ls)
+{
+	char		*pos;
+	ssize_t		y;
+	
+
+	y = 0;
+	while (y < ls->map_h)
+	{
+		pos = ft_strchr((ls->map)[y], ls->e);
+		while (pos)
+		{
+			calculate_distance(ls, pos - (ls->map)[y], y);
+			pos = ft_strchr(++pos, ls->e);
+		}
+		y++;
+	}
+	prnt_matrix(ls);
+}
+
+void			distance_matrix_reset(t_filler *ls)
+{
+	ssize_t		y;
+	ssize_t		x;
+
+	y = 0;
+	while (y < ls->map_h)
+	{
+		x = 0;
+		while (x < ls->map_w)
+		{
+			(ls->matr)[y][x] = INT_MAX;
+			x++;
+		}
+		y++;
+	}
+}
+
 void			first_read_map(t_filler *ls)
 {debug_msg("first_read_map");
 	ssize_t		i;
@@ -132,14 +217,18 @@ void			first_read_map(t_filler *ls)
 	i = 0;
 	check_read(ls, "    0", 5);
 	ls->map = (char **)ft_newarr(ls->map_h);
+	ls->matr = (int **)ft_newarr(ls->map_h);
 	while (i < ls->map_h && get_next_line(0, &LINE))
 	{
 		(ls->map)[i] = LINE + SHIFT;
+		(ls->matr)[i] = malloc(ls->map_w * sizeof(int));
 		// debug_msg(LINE);
 		debug_msg((ls->map)[i]);
 		i++;
 	}
 	read_piece(ls);
+	distance_matrix_reset(ls);
+	make_distance_matrix(ls);
 }
 
 void			read_header(t_filler *ls)
@@ -148,9 +237,15 @@ void			read_header(t_filler *ls)
 	if(get_next_line(0, &LINE) > 0 && ft_strnequ(LINE, "$$$ exec p", 10))
 	{
 		if (LINE[10] == '2')
+		{
 			ls->c = 'X';
+			ls->e = 'O';
+		}
 		else
+		{
 			ls->c = 'O';
+			ls->e = 'X';
+		}
 		ft_strdel(&LINE);
 	}
 	else
@@ -191,6 +286,8 @@ void			read_map(t_filler *ls)
 	}
 	// sleep(1);
 	read_piece(ls);
+	distance_matrix_reset(ls);
+	make_distance_matrix(ls);
 }
 
 int				try_to_put_piece(t_filler *ls, ssize_t x, ssize_t y)
@@ -224,6 +321,73 @@ int				try_to_put_piece(t_filler *ls, ssize_t x, ssize_t y)
 	return (((ls->is_overlap && f_x == ls->fig_w && f_y == ls->fig_h) ? 1 : 0));
 	// return (1);
 }
+
+int				find_min_in_matrix(t_filler *ls)
+{
+	ssize_t		y;
+	ssize_t		x;
+	int			min[3];
+
+	y = 0;
+	min[0] = INT_MAX;
+	while (y < ls->map_h - ls->fig_h)
+	{
+		x = 0;
+		while (x < ls->map_w - ls->fig_w)
+		{
+			if ((ls->matr)[y][x] < min[0] && (ls->matr)[y][x] > 0)
+			{
+				min[0] = (ls->matr)[y][x];
+				min[1] = x;
+				min[2] = y;
+			}
+			x++;
+		}
+		y++;
+	}
+	//check here x&y
+	if (min[0] == INT_MAX)
+		return (0);
+	(ls->matr)[min[1]][min[2]] = INT_MAX;
+	if (try_to_put_piece(ls, min[1], min[2]))
+	{
+		ls->put_x = min[1];
+		ls->put_y = min[2];
+		debug_msg_nonl("FOUND_BY_MIN "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
+		return (1);
+	}
+	else
+	{
+
+		return (find_min_in_matrix(ls));
+	}
+}
+
+// void			find_place_depending_on_distance(t_filler *ls, ssize_t x, ssize_t y)
+// {debug_msg("find_place_depending_on_distance");
+// 	if (ls->map_w >= ls->fig_w && ls->map_h >= ls->fig_h)
+// 	{
+// 		while (y >= 0)
+// 		{
+// 			x = ls->map_w - ls->fig_w;
+// 			while (x >= 0)
+// 			{
+// 				if (try_to_put_piece(ls, x, y))
+// 				{
+// 					ls->put_x = x;
+// 					ls->put_y = y;
+// 					debug_msg_nonl("FOUND "); debug_msg_nonl(ft_itoa_u(x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(y));
+// 					return ;
+// 				}
+// 				x--;
+// 			}
+// 			y--;
+// 		}
+// 		error_msg("there is no way to put that shit on map!", ls);
+// 	}
+// 	else
+// 		error_msg("figure is smaller than map!", ls);
+// }
 
 void			find_place(t_filler *ls, ssize_t x, ssize_t y)
 {debug_msg("find_place");
@@ -328,27 +492,29 @@ int				main(void)
 	ls = (t_filler *)ft_memalloc(sizeof(t_filler));
 	read_header(ls);
 	check_direction(ls);
-	if (ls->reverse)
-			find_place_reverse(ls, 0, 0);
+	// if (ls->reverse)
+	// 		find_place_reverse(ls, 0, 0);
+	// else
+	// 	find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
+	if (find_min_in_matrix(ls))
+		do_answer(ls);
 	else
-		find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
-	do_answer(ls);
-	// debug_msg("first_print answer");
-	// 	write(1, "8 2\n", 4);
+		return (-10);
 	// 	sleep(1);
 	while(1)
 	{
 		read_map(ls);
-		if (ls->reverse)
-			find_place_reverse(ls, 0, 0);
+		// if (ls->reverse)
+		// 	find_place_reverse(ls, 0, 0);
+		// else
+		// 	find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
+		if (find_min_in_matrix(ls))
+			do_answer(ls);
 		else
-			find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
+			return (-10);
 		// debug_msg_nonl("PUT_AT "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
 		// printf("%zu %zu\n", ls->put_y, ls->put_x);
 		do_answer(ls);
-		// debug_msg("print answer");
-		// write(1, "8 2\n", 4);
-		// sleep(1);
 	}
 	// struct_delete(&ls);
 	error_msg("##EXITING##", ls);
