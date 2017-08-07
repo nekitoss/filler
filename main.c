@@ -1,5 +1,5 @@
-// #define DEBUG
-// #define ERRRORING
+#define DEBUG
+#define ERRRORING
 
 #include "ft_filler.h"
 #define LINE (ls->line)
@@ -314,7 +314,10 @@ void			check_direction(t_filler *ls)
 		}
 		i++;
 	}
-	ls->reverse = ((pos[0][1] > pos[1][1]) ? 1 : 0);
+	if (ls->c == 'O')
+		ls->reverse = ((pos[0][1] > pos[1][1]) ? 1 : 0);
+	else
+		ls->reverse = ((pos[0][1] > pos[1][1]) ? 0 : 1);
 	debug_msg_nonl("reverse ="); debug_msg(ft_itoa_u(ls->reverse));
 }
 
