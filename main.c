@@ -1,19 +1,5 @@
 #include "ft_filler.h"
 
-int			check_read(t_filler *ls, char *str, ssize_t len)
-{
-	int res;
-
-	res = get_next_line(0, &LINE);
-	if (res > 0 && ft_strnequ(LINE, str, len))
-	{
-		//ft_strdel(&LINE);
-		return (1);
-	}
-	ls->ok = 0;
-	return (0);
-}
-
 void			renew_fig_array(t_filler *ls)
 {
 	ssize_t i;
@@ -119,7 +105,7 @@ void			first_read_map(t_filler *ls)
 	ssize_t		i;
 
 	i = 0;
-	check_read(ls, "    0", 5);
+	get_next_line(0, &LINE);
 	ls->map = (char **)ft_newarr(ls->map_h);
 	ls->matr = (int **)ft_newarr(ls->map_h);
 	while (i < ls->map_h && get_next_line(0, &LINE))
@@ -168,8 +154,8 @@ void			read_map(t_filler *ls)
 	char		*tmp;
 
 	i = 0;
-	check_read(ls, "Plateau ", 8);
-	check_read(ls, "    0", 5);
+	get_next_line(0, &LINE);
+	get_next_line(0, &LINE);
 	while (ls->ok && i < ls->map_h && get_next_line(0, &LINE) > 0)
 	{
 		tmp = ls->map[i] - SHIFT;
