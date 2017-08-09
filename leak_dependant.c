@@ -11,7 +11,6 @@ void			read_piece(t_filler *ls)
 		ls->fig_h = ft_atoi(LINE);
 		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
 		ls->fig_w = ft_atoi(LINE);
-		//ft_strdel(&LINE);
 	}
 	renew_fig_array(ls);
 }
@@ -31,7 +30,6 @@ void			read_header(t_filler *ls)
 			ls->c = 'O';
 			ls->e = 'X';
 		}
-		//ft_strdel(&LINE);
 	}
 	if (get_next_line(0, &LINE) > 0 && ft_strnequ(LINE, "Plateau ", 8))
 	{
@@ -40,7 +38,6 @@ void			read_header(t_filler *ls)
 		ls->map_h = ft_atoi(LINE);
 		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
 		ls->map_w = ft_atoi(LINE);
-		//ft_strdel(&LINE);
 	}
 	first_read_map(ls);
 }
@@ -56,7 +53,6 @@ void			read_map(t_filler *ls)
 	while (ls->ok && i < ls->map_h && get_next_line(0, &LINE) > 0)
 	{
 		tmp = ls->map[i] - SHIFT;
-		//ft_strdel(&tmp);
 		(ls->map)[i] = LINE + SHIFT;
 		i++;
 	}
