@@ -406,7 +406,6 @@ int				find_min_in_matrix(t_filler *ls)
 		}
 		y++;
 	}
-	//check here x&y
 	if (min[0] == INT_MAX)
 		return (0);
 	(ls->matr)[MIN_Y][MIN_X] = INT_MAX;
@@ -423,32 +422,6 @@ int				find_min_in_matrix(t_filler *ls)
 		return (find_min_in_matrix(ls));
 	}
 }
-
-// void			find_place_depending_on_distance(t_filler *ls, ssize_t x, ssize_t y)
-// {debug_msg("find_place_depending_on_distance");
-// 	if (ls->map_w >= ls->fig_w && ls->map_h >= ls->fig_h)
-// 	{
-// 		while (y >= 0)
-// 		{
-// 			x = ls->map_w - ls->fig_w;
-// 			while (x >= 0)
-// 			{
-// 				if (try_to_put_piece(ls, x, y))
-// 				{
-// 					ls->put_x = x;
-// 					ls->put_y = y;
-// 					debug_msg_nonl("FOUND "); debug_msg_nonl(ft_itoa_u(x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(y));
-// 					return ;
-// 				}
-// 				x--;
-// 			}
-// 			y--;
-// 		}
-// 		error_msg("there is no way to put that shit on map!", ls);
-// 	}
-// 	else
-// 		error_msg("figure is smaller than map!", ls);
-// }
 
 void			find_place(t_filler *ls, ssize_t x, ssize_t y)
 {debug_msg("find_place");
@@ -554,27 +527,13 @@ int				main(void)
 	ls->put_dist = SSIZE_MAX;
 	read_header(ls);
 	check_direction(ls);
-	// if (ls->reverse)
-	// 		find_place_reverse(ls, 0, 0);
-	// else
-	// 	find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
 	find_place_depending_on_min(ls);
 	do_answer(ls);
-	// 	sleep(1);
 	while(1)
 	{
 		read_map(ls);
-		// if (ls->reverse)
-		// 	find_place_reverse(ls, 0, 0);
-		// else
-		// 	find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
 		find_place_depending_on_min(ls);
 		do_answer(ls);
-		// debug_msg_nonl("PUT_AT "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
-		// printf("%zu %zu\n", ls->put_y, ls->put_x);
-		// do_answer(ls);
 	}
-	// struct_delete(&ls);
-	error_msg("##EXITING##", ls);
 	return (0);
 }
