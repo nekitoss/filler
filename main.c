@@ -196,7 +196,7 @@ int				try_to_put_piece(t_filler *ls, ssize_t y, ssize_t x)
 	return (((ls->is_overlap && f_x == ls->fig_w && f_y == ls->fig_h) ? 1 : 0));
 }
 
-void				compare_distance(t_filler *ls, ssize_t new_y, ssize_t new_x)
+void			compare_distance(t_filler *ls, ssize_t new_y, ssize_t new_x)
 {
 	ssize_t f_x;
 	ssize_t f_y;
