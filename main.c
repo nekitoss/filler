@@ -1,30 +1,4 @@
 #include "ft_filler.h"
-#define LINE (ls->line)
-#define SHIFT 4
-#define MY -1
-#define ENEMY -2
-#define MIN_X min[2]
-#define MIN_Y min[1]
-
-typedef struct	s_filler
-{
-	ssize_t	map_w;
-	ssize_t	map_h;
-	ssize_t	fig_w;
-	ssize_t	fig_h;
-	ssize_t	put_x;
-	ssize_t	put_y;
-	ssize_t put_dist;
-	char	**fig;
-	char	**map;
-	char	c;
-	char	e;
-	char	*line;
-	int		ok;
-	int		is_overlap;
-	int		reverse;
-	int		**matr;
-}				t_filler;
 
 int			check_read(t_filler *ls, char *str, ssize_t len)
 {
@@ -61,10 +35,10 @@ void			read_piece(t_filler *ls)
 {
 	ls->fig_h = 0;
 	ls->fig_w = 0;
-	int res = get_next_line(0, &LINE);
-	if(ls->ok &&  res> 0 && ft_strnequ(LINE, "Piece ", 6))
+	if (ls->ok && get_next_line(0, &LINE) > 0 && ft_strnequ(LINE, "Piece ", 6))
 	{
-		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE + 1, ft_strlen(LINE));
+		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ')
+				- LINE + 1, ft_strlen(LINE));
 		ls->fig_h = ft_atoi(LINE);
 		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
 		ls->fig_w = ft_atoi(LINE);
@@ -105,7 +79,6 @@ void			make_distance_matrix(t_filler *ls)
 {
 	char		*pos;
 	ssize_t		y;
-	
 
 	y = 0;
 	while (y < ls->map_h)
@@ -163,7 +136,7 @@ void			first_read_map(t_filler *ls)
 void			read_header(t_filler *ls)
 {
 	ls->ok = 1;
-	if(get_next_line(0, &LINE) > 0 && ft_strnequ(LINE, "$$$ exec p", 10))
+	if (get_next_line(0, &LINE) > 0 && ft_strnequ(LINE, "$$$ exec p", 10))
 	{
 		if (LINE[10] == '2')
 		{
@@ -177,9 +150,10 @@ void			read_header(t_filler *ls)
 		}
 		//ft_strdel(&LINE);
 	}
-	if(get_next_line(0, &LINE) > 0 && ft_strnequ(LINE, "Plateau ", 8))
+	if (get_next_line(0, &LINE) > 0 && ft_strnequ(LINE, "Plateau ", 8))
 	{
-		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE + 1, ft_strlen(LINE));
+		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ')
+				- LINE + 1, ft_strlen(LINE));
 		ls->map_h = ft_atoi(LINE);
 		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
 		ls->map_w = ft_atoi(LINE);
@@ -236,7 +210,7 @@ int				try_to_put_piece(t_filler *ls, ssize_t y, ssize_t x)
 	return (((ls->is_overlap && f_x == ls->fig_w && f_y == ls->fig_h) ? 1 : 0));
 }
 
-void				compare_and_set_new_distance(t_filler *ls, ssize_t new_y, ssize_t new_x)
+void				compare_distance(t_filler *ls, ssize_t new_y, ssize_t new_x)
 {
 	ssize_t f_x;
 	ssize_t f_y;
@@ -276,7 +250,7 @@ int				find_place_depending_on_min(t_filler *ls)
 		{
 			if (try_to_put_piece(ls, y, x))
 			{
-				compare_and_set_new_distance(ls, y, x);
+				compare_distance(ls, y, x);
 			}
 			x++;
 		}
@@ -302,7 +276,7 @@ int				main(void)
 	read_header(ls);
 	find_place_depending_on_min(ls);
 	do_answer(ls);
-	while(1)
+	while (1)
 	{
 		read_map(ls);
 		find_place_depending_on_min(ls);
