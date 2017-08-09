@@ -11,7 +11,9 @@ FLAGS = -Wall -Wextra -Werror
 
 NAME = filler
 
-SRC = main.c
+SRC = main.c\
+	distance_and_put.c\
+	leak_dependant.c
 
 OBJ = $(SRC:.c=.o)
 
