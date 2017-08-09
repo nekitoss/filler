@@ -65,12 +65,6 @@ void			error_msg(char *str, t_filler *ls)
 #endif
 }
 
-void			struct_delete(t_filler	**ls)
-{
-	free(*ls);
-	*ls = NULL;
-}
-
 int			check_read(t_filler *ls, char *str, ssize_t len)
 {
 	int res;
@@ -383,140 +377,12 @@ int				find_place_depending_on_min(t_filler *ls)
 	return ((ls->put_x >= 0 ? 1 : 0));
 }
 
-int				find_min_in_matrix(t_filler *ls)
-{
-	ssize_t		y;
-	ssize_t		x;
-	int			min[3];
-
-	y = 0;
-	min[0] = INT_MAX;
-	while (y < ls->map_h - ls->fig_h + 1)
-	{
-		x = 0;
-		while (x < ls->map_w - ls->fig_w + 1)
-		{
-			if ((ls->matr)[y][x] < min[0] && (ls->matr)[y][x] > 0)
-			{
-				min[0] = (ls->matr)[y][x];
-				MIN_Y = y;
-				MIN_X = x;
-			}
-			x++;
-		}
-		y++;
-	}
-	if (min[0] == INT_MAX)
-		return (0);
-	(ls->matr)[MIN_Y][MIN_X] = INT_MAX;
-	if (try_to_put_piece(ls, MIN_Y, MIN_X))
-	{
-		ls->put_y = MIN_Y;
-		ls->put_x = MIN_X;
-		debug_msg_nonl("FOUND_BY_MIN "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
-		return (1);
-	}
-	else
-	{
-
-		return (find_min_in_matrix(ls));
-	}
-}
-
-void			find_place(t_filler *ls, ssize_t x, ssize_t y)
-{debug_msg("find_place");
-	if (ls->map_w >= ls->fig_w && ls->map_h >= ls->fig_h)
-	{
-		while (y >= 0)
-		{
-			x = ls->map_w - ls->fig_w;
-			while (x >= 0)
-			{
-				if (try_to_put_piece(ls, x, y))
-				{
-					ls->put_x = x;
-					ls->put_y = y;
-					debug_msg_nonl("FOUND "); debug_msg_nonl(ft_itoa_u(x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(y));
-					return ;
-				}
-				x--;
-			}
-			y--;
-		}
-		error_msg("there is no way to put that shit on map!", ls);
-	}
-	else
-		error_msg("figure is smaller than map!", ls);
-}
-
-void			find_place_reverse(t_filler *ls, ssize_t x, ssize_t y)
-{debug_msg("find_place_reverse");
-	ssize_t x_w;
-	ssize_t y_h;
-
-	if (ls->map_w >= ls->fig_w && ls->map_h >= ls->fig_h)
-	{
-		x_w = ls->map_w - ls->fig_w;
-		y_h = ls->map_h - ls->fig_h;
-		while (y < y_h)
-		{
-			x = 0;
-			while (x < x_w)
-			{
-				if (try_to_put_piece(ls, x, y))
-				{
-					ls->put_x = x;
-					ls->put_y = y;
-					debug_msg_nonl("FOUND "); debug_msg_nonl(ft_itoa_u(x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(y));
-					return ;
-				}
-				x++;
-			}
-			y++;
-		}
-		error_msg("there is no way to put that shit on map!", ls);
-	}
-	else
-		error_msg("figure is smaller than map!", ls);
-}
-
 void			do_answer(t_filler *ls)
 {debug_msg("do_answer");
 	ft_putnbr_u(ls->put_y);
 	ft_putchar(' ');
 	ft_putnbr_u(ls->put_x);
 	ft_putchar('\n');
-}
-
-void			check_direction(t_filler *ls)
-{debug_msg("check_direction");
-	ssize_t		i;
-	ssize_t		pos[2][2];
-	char		*fnd_o;
-	char		*fnd_x;
-
-	i = 0;
-	while (i < ls->map_h)
-	{
-		fnd_o = ft_strchr((ls->map)[i], 'O');
-		fnd_x = ft_strchr((ls->map)[i], 'X');
-		if (fnd_o)
-		{
-			pos[0][0] = fnd_o - (ls->map)[i];
-			pos[0][1] = i;
-		}
-		if (fnd_x)
-		{
-			pos[1][0] = fnd_x - (ls->map)[i];
-			pos[1][1] = i;
-		}
-		i++;
-	}
-	if (ls->c == 'O')
-		ls->reverse = ((pos[0][1] > pos[1][1]) ? 1 : 0);
-	else
-		ls->reverse = ((pos[0][1] > pos[1][1]) ? 0 : 1);
-	debug_msg_nonl("reverse ="); debug_msg(ft_itoa_u(ls->reverse));
 }
 
 int				main(void)
@@ -526,7 +392,6 @@ int				main(void)
 	ls = (t_filler *)ft_memalloc(sizeof(t_filler));
 	ls->put_dist = SSIZE_MAX;
 	read_header(ls);
-	check_direction(ls);
 	find_place_depending_on_min(ls);
 	do_answer(ls);
 	while(1)
