@@ -1,4 +1,4 @@
-#define DEBUG
+// #define DEBUG
 // #define ERRRORING
 
 #include "ft_filler.h"
@@ -6,6 +6,8 @@
 #define SHIFT 4
 #define MY -1
 #define ENEMY -2
+#define MIN_X min[2]
+#define MIN_Y min[1]
 
 typedef struct	s_filler
 {
@@ -15,6 +17,7 @@ typedef struct	s_filler
 	ssize_t	fig_h;
 	ssize_t	put_x;
 	ssize_t	put_y;
+	ssize_t put_dist;
 	char	**fig;
 	char	**map;
 	char	c;
@@ -75,7 +78,7 @@ int			check_read(t_filler *ls, char *str, ssize_t len)
 	res = get_next_line(0, &LINE);
 	if (res > 0 && ft_strnequ(LINE, str, len))
 	{
-		ft_strdel(&LINE);
+		//ft_strdel(&LINE);
 		return (1);
 	}
 	else
@@ -117,7 +120,7 @@ void			read_piece(t_filler *ls)
 		ls->fig_h = ft_atoi(LINE);
 		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
 		ls->fig_w = ft_atoi(LINE);
-		ft_strdel(&LINE);
+		//ft_strdel(&LINE);
 	}
 	else
 	{
@@ -130,7 +133,7 @@ void			read_piece(t_filler *ls)
 }
 
 void prnt_matrix(t_filler *ls)
-{
+{debug_msg("prnt_matrix");
 	int		x;
 	int		y;
 
@@ -150,9 +153,10 @@ void prnt_matrix(t_filler *ls)
 }
 
 void			calculate_distance(t_filler *ls, int e_x, int e_y)
-{
+{debug_msg("calculate_distance");
 	int		x;
 	int		y;
+	int		d;
 
 	y = 0;
 	while (y < ls->map_h)
@@ -165,7 +169,11 @@ void			calculate_distance(t_filler *ls, int e_x, int e_y)
 			else if ((ls->map)[y][x] == ls->e)
 				(ls->matr)[y][x] = ENEMY;
 			else
-				(ls->matr)[y][x] = ABS((x - e_x)) + ABS((y - e_y));
+			{
+				d = ABS((x - e_x)) + ABS((y - e_y));
+				if (d < (ls->matr)[y][x])
+					(ls->matr)[y][x] = d;
+			}
 			x++;
 		}
 		y++;
@@ -173,7 +181,7 @@ void			calculate_distance(t_filler *ls, int e_x, int e_y)
 }
 
 void			make_distance_matrix(t_filler *ls)
-{
+{debug_msg("make_distance_matrix");
 	char		*pos;
 	ssize_t		y;
 	
@@ -193,10 +201,13 @@ void			make_distance_matrix(t_filler *ls)
 }
 
 void			distance_matrix_reset(t_filler *ls)
-{
+{debug_msg("distance_matrix_reset");
 	ssize_t		y;
 	ssize_t		x;
 
+	ls->put_y = -1;
+	ls->put_x = -1;
+	ls->put_dist = SSIZE_MAX;
 	y = 0;
 	while (y < ls->map_h)
 	{
@@ -246,7 +257,7 @@ void			read_header(t_filler *ls)
 			ls->c = 'O';
 			ls->e = 'X';
 		}
-		ft_strdel(&LINE);
+		//ft_strdel(&LINE);
 	}
 	else
 		error_msg("while reading first line!", ls);
@@ -257,7 +268,7 @@ void			read_header(t_filler *ls)
 		ls->map_h = ft_atoi(LINE);
 		LINE = ft_strsub_d(&LINE, ft_strchr(LINE, ' ') - LINE, ft_strlen(LINE));
 		ls->map_w = ft_atoi(LINE);
-		ft_strdel(&LINE);
+		//ft_strdel(&LINE);
 	}
 	else
 		error_msg("while reading 2nd line!", ls);
@@ -277,7 +288,7 @@ void			read_map(t_filler *ls)
 	while (ls->ok && i < ls->map_h && get_next_line(0, &LINE) > 0)
 	{
 		tmp = ls->map[i] - SHIFT;
-		ft_strdel(&tmp);
+		//ft_strdel(&tmp);
 		(ls->map)[i] = LINE + SHIFT;
 		// debug_msg(LINE);
 		// debug_msg((ls->map)[i]);
@@ -290,7 +301,7 @@ void			read_map(t_filler *ls)
 	make_distance_matrix(ls);
 }
 
-int				try_to_put_piece(t_filler *ls, ssize_t x, ssize_t y)
+int				try_to_put_piece(t_filler *ls, ssize_t y, ssize_t x)
 {
 	ssize_t f_x;
 	ssize_t f_y;
@@ -322,6 +333,56 @@ int				try_to_put_piece(t_filler *ls, ssize_t x, ssize_t y)
 	// return (1);
 }
 
+void				compare_and_set_new_distance(t_filler *ls, ssize_t new_y, ssize_t new_x)
+{
+	ssize_t f_x;
+	ssize_t f_y;
+	ssize_t temp_dist;
+
+	temp_dist = 0;
+	f_x = 0;
+	while (f_x < ls->fig_w)
+	{
+		f_y = 0;
+		while (f_y < ls->fig_h)
+		{
+			if ((ls->fig)[f_y][f_x] == '*')
+				temp_dist += (ls->matr)[(f_y + new_y)][(f_x + new_x)];
+			f_y++;
+		}
+		f_x++;
+	}
+	if (temp_dist < ls->put_dist)
+	{
+		ls->put_x = new_x;
+		ls->put_y = new_y;
+		ls->put_dist = temp_dist;
+	}
+}
+
+int				find_place_depending_on_min(t_filler *ls)
+{debug_msg("find_place_depending_on_min");
+	ssize_t		y;
+	ssize_t		x;
+
+	y = 0;
+	while (y < ls->map_h - ls->fig_h + 1)
+	{
+		x = 0;
+		while (x < ls->map_w - ls->fig_w + 1)
+		{
+			if (try_to_put_piece(ls, y, x))
+			{
+				compare_and_set_new_distance(ls, y, x);
+			}
+			x++;
+		}
+		y++;
+	}
+	debug_msg_nonl("FOUND_BY_MIN "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
+	return ((ls->put_x >= 0 ? 1 : 0));
+}
+
 int				find_min_in_matrix(t_filler *ls)
 {
 	ssize_t		y;
@@ -330,16 +391,16 @@ int				find_min_in_matrix(t_filler *ls)
 
 	y = 0;
 	min[0] = INT_MAX;
-	while (y < ls->map_h - ls->fig_h)
+	while (y < ls->map_h - ls->fig_h + 1)
 	{
 		x = 0;
-		while (x < ls->map_w - ls->fig_w)
+		while (x < ls->map_w - ls->fig_w + 1)
 		{
 			if ((ls->matr)[y][x] < min[0] && (ls->matr)[y][x] > 0)
 			{
 				min[0] = (ls->matr)[y][x];
-				min[1] = x;
-				min[2] = y;
+				MIN_Y = y;
+				MIN_X = x;
 			}
 			x++;
 		}
@@ -348,11 +409,11 @@ int				find_min_in_matrix(t_filler *ls)
 	//check here x&y
 	if (min[0] == INT_MAX)
 		return (0);
-	(ls->matr)[min[1]][min[2]] = INT_MAX;
-	if (try_to_put_piece(ls, min[1], min[2]))
+	(ls->matr)[MIN_Y][MIN_X] = INT_MAX;
+	if (try_to_put_piece(ls, MIN_Y, MIN_X))
 	{
-		ls->put_x = min[1];
-		ls->put_y = min[2];
+		ls->put_y = MIN_Y;
+		ls->put_x = MIN_X;
 		debug_msg_nonl("FOUND_BY_MIN "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
 		return (1);
 	}
@@ -447,7 +508,7 @@ void			find_place_reverse(t_filler *ls, ssize_t x, ssize_t y)
 }
 
 void			do_answer(t_filler *ls)
-{
+{debug_msg("do_answer");
 	ft_putnbr_u(ls->put_y);
 	ft_putchar(' ');
 	ft_putnbr_u(ls->put_x);
@@ -490,16 +551,15 @@ int				main(void)
 	t_filler	*ls;
 
 	ls = (t_filler *)ft_memalloc(sizeof(t_filler));
+	ls->put_dist = SSIZE_MAX;
 	read_header(ls);
 	check_direction(ls);
 	// if (ls->reverse)
 	// 		find_place_reverse(ls, 0, 0);
 	// else
 	// 	find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
-	if (find_min_in_matrix(ls))
-		do_answer(ls);
-	else
-		return (-10);
+	find_place_depending_on_min(ls);
+	do_answer(ls);
 	// 	sleep(1);
 	while(1)
 	{
@@ -508,13 +568,11 @@ int				main(void)
 		// 	find_place_reverse(ls, 0, 0);
 		// else
 		// 	find_place(ls, ls->map_w - ls->fig_w, ls->map_h - ls->fig_h);
-		if (find_min_in_matrix(ls))
-			do_answer(ls);
-		else
-			return (-10);
+		find_place_depending_on_min(ls);
+		do_answer(ls);
 		// debug_msg_nonl("PUT_AT "); debug_msg_nonl(ft_itoa_u(ls->put_x)); debug_msg_nonl(" : "); debug_msg(ft_itoa_u(ls->put_y));
 		// printf("%zu %zu\n", ls->put_y, ls->put_x);
-		do_answer(ls);
+		// do_answer(ls);
 	}
 	// struct_delete(&ls);
 	error_msg("##EXITING##", ls);
