@@ -5,7 +5,7 @@ This game looks like tetris, but rules are different. You have a field with two 
 
 To clone with submodule:
 
-git clone https://github.com/nekitoss/ft_printf.git
+git clone https://github.com/nekitoss/filler.git
 
 git submodule init
 
